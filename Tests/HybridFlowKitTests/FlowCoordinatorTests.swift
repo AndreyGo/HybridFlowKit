@@ -61,7 +61,10 @@ private final class RecordingNavigationController: UINavigationController {
     private(set) var presentAnimated: Bool?
     private(set) var popCallCount: Int = 0
     private(set) var popAnimated: Bool?
-    private(set) weak var presentedViewController: UIViewController?
+    private var recordedPresentedViewController: UIViewController?
+    override var presentedViewController: UIViewController? {
+        recordedPresentedViewController ?? super.presentedViewController
+    }
 
     override func pushViewController(_ viewController: UIViewController, animated: Bool) {
         pushedViewControllers.append(viewController)
@@ -69,7 +72,7 @@ private final class RecordingNavigationController: UINavigationController {
     }
 
     override func present(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (() -> Void)? = nil) {
-        presentedViewController = viewControllerToPresent
+        recordedPresentedViewController = viewControllerToPresent
         presentAnimated = animated
         completion?()
     }
