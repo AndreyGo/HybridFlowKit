@@ -15,6 +15,11 @@ let package = Package(
             dependencies: [],
             path: "Sources/HybridFlowKit",
             resources: []
+        ),
+        .testTarget(
+            name: "HybridFlowKitTests",
+            dependencies: ["HybridFlowKit"],
+            path: "Tests/HybridFlowKitTests"
         )
     ]
 )
