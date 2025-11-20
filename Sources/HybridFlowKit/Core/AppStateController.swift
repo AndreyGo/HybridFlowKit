@@ -22,10 +22,15 @@ open class AppStateController {
     /// Called whenever the active flow finishes with an event.
     public var onFlowFinish: ((FlowFinishEvent) -> Void)?
 
+    /// Shared environment passed into newly created flows.
+    public let environment: AppEnvironment
+
     /// Creates a new controller with the provided initial state.
     /// - Parameter initialState: The initial application state. Defaults to `.splash`.
-    public init(initialState: AppState = .splash) {
+    /// - Parameter environment: Application environment containing services and logging.
+    public init(initialState: AppState = .splash, environment: AppEnvironment = AppEnvironment()) {
         currentState = initialState
+        self.environment = environment
         currentFlow = makeFlow(for: initialState)
         currentFlow?.onFinish = { [weak self] event in
             self?.handleFlowFinish(event)
@@ -43,14 +48,14 @@ open class AppStateController {
         }
         currentFlow = flow
         flow.start()
-        Logger.logFlowTransition("Switched to state: \(state)")
+        environment.logger.log("Switched to state: \(state)")
     }
 
     /// Creates a flow for the provided state. Override to provide concrete flows from the host app.
     /// - Parameter state: The state for which to build a flow.
     /// - Returns: A flow ready to be started.
     open func makeFlow(for state: AppState) -> Flow {
-        PlaceholderFlow(state: state)
+        PlaceholderFlow(state: state, environment: environment)
     }
 
     /// Returns the root view controller of the currently active flow.
@@ -82,14 +87,17 @@ private final class PlaceholderFlow: Flow {
 
     let rootViewController: UIViewController
 
-    init(state: AppState) {
+    private let environment: AppEnvironment
+
+    init(state: AppState, environment: AppEnvironment) {
         let controller = UIViewController()
         controller.view.backgroundColor = .systemBackground
         controller.title = "Placeholder for \(state)"
         rootViewController = controller
+        self.environment = environment
     }
 
     func start() {
-        Logger.logFlowTransition("Starting placeholder flow")
+        environment.logger.log("Starting placeholder flow")
     }
 }
