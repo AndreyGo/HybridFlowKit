@@ -5,10 +5,13 @@ HybridFlowKit is a lightweight architectural toolkit for building hybrid iOS app
 ## Features
 - Flow protocol with base coordinator and finish events.
 - App state controller to swap flows for onboarding, authorization, splash, and more.
+- Application environment with a lightweight service container and logger abstraction.
 - Navigation helpers and context abstractions for UIKit-based routing.
 - UIKit containers that host SwiftUI and support a collapsing header pattern.
 - Screen module abstraction and factory protocol for type-safe module creation.
 - Minimal logger and convenience extensions to streamline integration.
+- Modal flow coordinator for presented experiences like paywalls or settings.
+- Building blocks for paginated lists plus reusable loading/error presenters.
 
 ## Repository Structure
 ```
@@ -53,6 +56,21 @@ window.rootViewController = appController.currentRootViewController()
 appController.currentFlow?.start()
 ```
 
+### Environment & Services
+Use `AppEnvironment` to bundle services, loggers, and dispatch queues, then pass it through your flows.
+
+```swift
+protocol AuthService { func isAuthorized() -> Bool }
+
+let services = ServiceContainer()
+services.register(AuthService.self, instance: MyAuthService())
+
+let environment = AppEnvironment(services: services, logger: DefaultLogger())
+let appController = AppStateController(initialState: .authorized, environment: environment)
+```
+
+See `Examples/EnvironmentExample.swift` for a full example with a custom flow.
+
 ### Building flows with `FlowCoordinator`
 ```swift
 final class OnboardingFlowCoordinator: FlowCoordinator {
@@ -69,6 +87,29 @@ final class OnboardingFlowCoordinator: FlowCoordinator {
     }
 }
 ```
+
+### Modal Flow
+Use `ModalFlowCoordinator` to manage flows that are presented modally from another coordinator.
+
+```swift
+final class PaywallFlow: ModalFlowCoordinator {
+    override func start() {
+        let viewController = PaywallViewController()
+        if let navigationController = rootViewController as? UINavigationController {
+            navigationController.viewControllers = [viewController]
+        }
+    }
+}
+
+let paywallFlow = PaywallFlow(environment: environment)
+paywallFlow.onFinish = { event in
+    environment.logger.log("Paywall finished: \(event)")
+}
+paywallFlow.start()
+navigationController.present(paywallFlow.rootViewController, animated: true)
+```
+
+See `Examples/ModalFlowExample.swift` for a complete demonstration.
 
 ### Creating a navigator inside a feature module
 ```swift
@@ -104,6 +145,26 @@ let tableView = UITableView()
 let collapsing = CollapsingHeaderViewController(headerView: header, scrollView: tableView, headerHeight: 240)
 collapsing.delegate = self
 ```
+
+### Paged Lists & Presenters
+`PagedListState` and `PagedListViewModel` provide a shared contract for paginated experiences, while `DefaultLoadingPresenter`
+and `DefaultErrorPresenter` offer simple UI feedback hooks.
+
+```swift
+final class DemoPagedListViewModel: PagedListViewModel {
+    typealias Item = String
+    private(set) var state = PagedListState<Item>()
+
+    func loadInitial() { /* kick off first page */ }
+    func loadMore() { /* request next page */ }
+}
+
+let viewModel = DemoPagedListViewModel()
+let loadingPresenter = DefaultLoadingPresenter()
+loadingPresenter.showLoading(on: viewController)
+```
+
+See `Examples/PagedListExample.swift` for a working sample with a table view.
 
 ## Contributing
 The toolkit is intentionally minimal and unopinionated. Extend the flows, navigators, and containers as needed for your application while keeping business logic outside the package.
