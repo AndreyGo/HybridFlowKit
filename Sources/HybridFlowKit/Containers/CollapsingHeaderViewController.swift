@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import UIKit
 
 /// Delegate notified about collapsing header progress updates.
@@ -107,3 +108,4 @@ extension CollapsingHeaderViewController: UIScrollViewDelegate {
         notifyIfNeededEndReached(scrollView)
     }
 }
+#endif
