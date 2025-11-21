@@ -146,6 +146,37 @@ let collapsing = CollapsingHeaderViewController(headerView: header, scrollView: 
 collapsing.delegate = self
 ```
 
+### SwiftUI collapsible header
+Use `CollapsibleHeaderView` to recreate the same collapsing behavior entirely in SwiftUI. The view listens for scroll direction through `CollapsibleHeaderViewModel` and adjusts the header height between expanded and collapsed states.
+
+```swift
+struct SwiftUICollapsibleDemo: View {
+    private let viewModel = CollapsibleHeaderViewModel()
+    private let items = Array(0..<100)
+
+    var body: some View {
+        CollapsibleHeaderView(items, id: \.self, expandedHeight: 220, collapsedHeight: 70, viewModel: viewModel) {
+            LinearGradient(colors: [.pink, .purple], startPoint: .top, endPoint: .bottom)
+        } rowContent: { item in
+            Text("Item #\(item)")
+        }
+    }
+}
+```
+
+To bridge this SwiftUI header into existing UIKit flows, wrap it with `BaseHostingViewController` and produce a `ScreenModule` just like any other view controller:
+
+```swift
+enum SwiftUICollapsibleHeaderExampleModule {
+    static func make() -> ScreenModule {
+        let hosting = BaseHostingViewController(rootView: SwiftUICollapsibleDemo())
+        return ScreenModule(viewController: hosting)
+    }
+}
+```
+
+See `Examples/SwiftUICollapsibleHeaderExample.swift` for a full sample that can be plugged into a `FlowCoordinator`.
+
 ### Paged Lists & Presenters
 `PagedListState` and `PagedListViewModel` provide a shared contract for paginated experiences, while `DefaultLoadingPresenter`
 and `DefaultErrorPresenter` offer simple UI feedback hooks.

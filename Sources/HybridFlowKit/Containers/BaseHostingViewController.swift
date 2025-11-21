@@ -1,3 +1,4 @@
+#if canImport(SwiftUI)
 import SwiftUI
 import UIKit
 
@@ -52,3 +53,4 @@ open class BaseHostingViewController<Content: View>: UIViewController {
         Logger.logNavigation("embedding SwiftUI", viewController: hostingController)
     }
 }
+#endif
